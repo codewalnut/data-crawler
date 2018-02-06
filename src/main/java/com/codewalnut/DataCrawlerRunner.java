@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
@@ -38,7 +37,7 @@ public class DataCrawlerRunner implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         // 参数处理
-        String heightRange = getSingle(args, "heightRange", "0,0");
+        String heightRange = getSingle(args, "heightRange", "0,1");
         String[] rangeArr = StringUtils.split(heightRange, ',');
         Assert.isTrue(StringUtils.countMatches(heightRange, ",") == 1, "Invalid arguments heightRange");
         int heightFrom = Integer.valueOf(rangeArr[0]);
@@ -55,7 +54,7 @@ public class DataCrawlerRunner implements ApplicationRunner {
             savePath = savePath + File.separator;
         }
 
-        AsyncTaskExecutor taskExecutor = getAsyncExecutor(threadPoolSize);
+        ThreadPoolTaskExecutor taskExecutor = getAsyncExecutor(threadPoolSize);
 
         log.info("Start to fetch block info from height:{} to {} with threadPoolSize={}", heightFrom, heightTo, threadPoolSize);
         log.info("All files will be saved to: {}", savePath);
@@ -70,14 +69,14 @@ public class DataCrawlerRunner implements ApplicationRunner {
         }
     }
 
-    private AsyncTaskExecutor getAsyncExecutor(int poolSize) {
+    private ThreadPoolTaskExecutor getAsyncExecutor(int poolSize) {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(2); // 线程池最小
+        executor.setCorePoolSize(poolSize); // 线程池最小
         executor.setMaxPoolSize(poolSize); // 线程池最大
         executor.setQueueCapacity(200000); // 线程等待队列长度
-        executor.setKeepAliveSeconds(30000); // 空闲线程释放等待时间
-        executor.setAwaitTerminationSeconds(30);
-        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setKeepAliveSeconds(30); // 空闲线程释放等待时间
+        executor.setAwaitTerminationSeconds(10);
+//        executor.setWaitForTasksToCompleteOnShutdown(true);
 //        executor.setDaemon(true);
         executor.initialize();
         return executor;
