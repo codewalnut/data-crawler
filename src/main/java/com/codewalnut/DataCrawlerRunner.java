@@ -76,7 +76,7 @@ public class DataCrawlerRunner implements ApplicationRunner {
         executor.setQueueCapacity(200000); // 线程等待队列长度
         executor.setKeepAliveSeconds(30); // 空闲线程释放等待时间
         executor.setAwaitTerminationSeconds(10);
-//        executor.setWaitForTasksToCompleteOnShutdown(true);
+        executor.setWaitForTasksToCompleteOnShutdown(true);
 //        executor.setDaemon(true);
         executor.initialize();
         return executor;
