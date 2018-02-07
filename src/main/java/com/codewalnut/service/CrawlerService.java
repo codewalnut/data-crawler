@@ -60,4 +60,31 @@ public class CrawlerService {
         }
     }
 
+    public String fetchAddressInfo(String address) {
+        long bgn = System.currentTimeMillis();
+
+        String ua = applicationProperties.getCrawlerBrowserUserAgent();
+//        String url = "https://blockchain.info/rawaddr/";
+        String url = "https://blockchain.info/multiaddr?active=";
+//        String url = "https://chain.api.btc.com/v3/address/";
+
+        String target = url + address;
+        try {
+            HttpHelper.Response res = HttpHelper.connect(target).timeout(1000 * 120).userAgent(ua).get();
+            if (res.statusCode() == 200) {
+                String json = res.html();
+                long end = System.currentTimeMillis();
+                String gap = LogUtils.getElapse(bgn, end);
+                log.info("fetched: {} {}", target, gap);
+                return json;
+            } else {
+                log.info("fetch {} response status code not 200", url);
+                return null;
+            }
+        } catch (Exception ex) {
+            log.error(ex.getLocalizedMessage());
+            return null;
+        }
+    }
+
 }
