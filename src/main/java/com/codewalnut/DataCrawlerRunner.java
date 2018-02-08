@@ -37,6 +37,7 @@ public class DataCrawlerRunner implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) throws Exception {
         // 参数处理
+        String daemon = getSingle(args, "daemon", "false");
         String heightRange = getSingle(args, "heightRange", "0,1");
         String[] rangeArr = StringUtils.split(heightRange, ',');
         Assert.isTrue(StringUtils.countMatches(heightRange, ",") == 1, "Invalid arguments heightRange");
@@ -54,7 +55,7 @@ public class DataCrawlerRunner implements ApplicationRunner {
             savePath = savePath + File.separator;
         }
 
-        ThreadPoolTaskExecutor taskExecutor = getAsyncExecutor(threadPoolSize);
+        ThreadPoolTaskExecutor taskExecutor = getAsyncExecutor(threadPoolSize, StringUtils.equals(daemon, "true"));
 
         log.info("Start to fetch block info from height:{} to {} with threadPoolSize={}", heightFrom, heightTo, threadPoolSize);
         log.info("All files will be saved to: {}", savePath);
@@ -69,7 +70,7 @@ public class DataCrawlerRunner implements ApplicationRunner {
         }
     }
 
-    private ThreadPoolTaskExecutor getAsyncExecutor(int poolSize) {
+    private ThreadPoolTaskExecutor getAsyncExecutor(int poolSize, boolean isDaemon) {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(poolSize); // 线程池最小
         executor.setMaxPoolSize(poolSize); // 线程池最大
@@ -77,7 +78,7 @@ public class DataCrawlerRunner implements ApplicationRunner {
         executor.setKeepAliveSeconds(30); // 空闲线程释放等待时间
         executor.setAwaitTerminationSeconds(10);
         executor.setWaitForTasksToCompleteOnShutdown(true);
-//        executor.setDaemon(true);
+        executor.setDaemon(isDaemon);
         executor.initialize();
         return executor;
     }
