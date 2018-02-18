@@ -37,12 +37,20 @@ public class CrawlerService {
         String url = applicationProperties.getCrawlerTargetApiAddr();
 
         String target = StringUtils.replaceOnce(url, "{$height}", height + "");
+        String filename = filepath + height + ".json";
         try {
-            FileUtils.writeStringToFile(new File(filepath + height + ".json"), target, Charset.forName("UTF-8"));
+            File file = new File(filename);
+            if (file.exists()) {
+                String content = FileUtils.readFileToString(new File(filename), Charset.forName("UTF-8"));
+                if (!StringUtils.startsWith(content, "http")) {
+                    return true;
+                }
+            }
+            FileUtils.writeStringToFile(new File(filename), target, Charset.forName("UTF-8"));
             HttpHelper.Response res = HttpHelper.connect(target).timeout(1000 * 120).userAgent(ua).maxBodySize(Integer.MAX_VALUE).get();
             if (res.statusCode() == 200) {
                 String json = res.html();
-                FileUtils.writeStringToFile(new File(filepath + height + ".json"), json, Charset.forName("UTF-8"));
+                FileUtils.writeStringToFile(new File(filename), json, Charset.forName("UTF-8"));
                 long end = System.currentTimeMillis();
                 String gap = LogUtils.getElapse(bgn, end);
                 log.info("fetched: {} {}", target, gap);
